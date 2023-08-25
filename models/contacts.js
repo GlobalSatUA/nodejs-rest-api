@@ -1,45 +1,33 @@
-const fs = require('fs/promises')
-
-const path = require('path');
-const contactsFilePath = path.join(__dirname, 'contacts.json');
+const Contact = require('../models/mongo'); 
 
 const listContacts = async () => {
-    const contactsData = await fs.readFile(contactsFilePath, 'utf-8'); 
-    const contacts = JSON.parse(contactsData); 
-    return contacts; 
+  try {
+    return await Contact.find();
+  } catch (error) {
+    throw error;
+  }
 };
 
 const getContactById = async (contactId) => {
-  const data = await fs.readFile(contactsFilePath, 'utf-8');
-    const contacts = JSON.parse(data);
-    const contact = contacts.find((c) => c.id === contactId);
-    return contact || null;
-}
+  try {
+    return await Contact.findById(contactId);
+  } catch (error) {
+    throw error;
+  }
+};
 
 const addContact = async (body) => {
-
-    let contacts = [];
-    const fileContent = await fs.readFile(contactsFilePath, 'utf-8');
-    contacts = JSON.parse(fileContent);
-    contacts.push(body);
-
-    await fs.writeFile(contactsFilePath, JSON.stringify(contacts, null, 2));
-
-    console.log(body);
-
+  try {
+    return await Contact.create(body);
+  } catch (error) {
+    throw error;
+  }
 };
 
 const removeContact = async (contactId) => {
   try {
-    let contacts = [];
-    const fileContent = await fs.readFile(contactsFilePath, 'utf-8');
-    contacts = JSON.parse(fileContent);
-
-    const initialLength = contacts.length;
-    contacts = contacts.filter((c) => c.id !== contactId);
-
-    if (contacts.length !== initialLength) {
-      await fs.writeFile(contactsFilePath, JSON.stringify(contacts, null, 2));
+    const result = await Contact.findByIdAndRemove(contactId);
+    if (result) {
       console.log(`Contact with ID ${contactId} has been deleted`);
       return true;
     } else {
@@ -51,25 +39,27 @@ const removeContact = async (contactId) => {
   }
 };
 
-
 const updateContact = async (contactId, updatedData) => {
-
-  
-  let contacts = [];
-  const fileContent = await fs.readFile(contactsFilePath, 'utf-8');
-  contacts = JSON.parse(fileContent);
-
-  const contactIndex = contacts.findIndex(contact => contact.id === contactId);
-  if (contactIndex === -1) {
+  try {
+    const result = await Contact.findByIdAndUpdate(contactId, updatedData, { new: true });
+    if (result) {
+      return result;
+    } else {
       throw new Error('Contact not found');
+    }
+  } catch (error) {
+    throw error;
   }
-
-  contacts[contactIndex] = { ...contacts[contactIndex], ...updatedData };
-
-  await fs.writeFile(contactsFilePath, JSON.stringify(contacts, null, 2));
-  return contacts[contactIndex];
 };
 
+const updateStatusContact = async (contactId, updatedData) => {
+  try {
+    const result = await Contact.findByIdAndUpdate(contactId, updatedData, { new: true });
+    return result;
+  } catch (error) {
+    throw error;
+  }
+};
 
 module.exports = {
   listContacts,
@@ -77,4 +67,5 @@ module.exports = {
   removeContact,
   addContact,
   updateContact,
-}
+  updateStatusContact,
+};

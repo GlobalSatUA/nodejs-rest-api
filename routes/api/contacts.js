@@ -5,7 +5,8 @@ const {
   getContactByIdController,
   addContactController,
   updateContactController,
-  removeContactController
+  removeContactController,
+  updateStatusContactController,
 } = require('../../controllers/contactController');
 const { validateData } = require('../../schema/contactsSchema');
 
@@ -14,6 +15,8 @@ router.get('/:contactId', getContactByIdController);
 router.post('/', validateData, addContactController);
 router.put('/:contactId', validateData, updateContactController);
 router.delete('/:contactId', removeContactController);
+router.patch('/:contactId/favorite', updateStatusContactController)
+
 
 module.exports = router;
 

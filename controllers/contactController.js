@@ -1,10 +1,10 @@
-const { v4: uuidv4 } = require('uuid');
 const {
   listContacts,
   getContactById,
   removeContact,
   addContact,
   updateContact,
+  updateStatusContact,
 } = require('../models/contacts');
 
 
@@ -33,11 +33,9 @@ const getContactByIdController = async (req, res, next) => {
 
 
 const addContactController = async (req, res, next) => {
-  const { name, email, phone } = req.body;
+  const { _id, name, email, phone } = req.body;
 
-
-  const id = uuidv4();
-  const contactData = { id, name, email, phone };
+  const contactData = { _id, name, email, phone };
 
   try {
     await addContact(contactData);
@@ -89,11 +87,34 @@ const updateContactController = async (req, res, next) => {
     }
   };
 
+  const updateStatusContactController = async (req, res, next) => {
+    const { contactId } = req.params;
+    const { favorite } = req.body;
+  
+    if (favorite === undefined) {
+      return res.status(400).json({ message: 'missing field favorite' });
+    }
+  
+    try {
+      const updatedContact = await updateStatusContact(contactId, { favorite });
+      if (updatedContact) {
+        return res.status(200).json(updatedContact);
+      } else {
+        return res.status(404).json({ message: 'Not found' });
+      }
+    } catch (error) {
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  };
+
+  
+
 module.exports = {
     listContactsController,
     getContactByIdController,
     addContactController,
     updateContactController,
     removeContactController,
+    updateStatusContactController,
 };
 
