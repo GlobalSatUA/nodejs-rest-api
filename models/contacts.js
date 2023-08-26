@@ -1,4 +1,4 @@
-const Contact = require('../models/mongo'); 
+const Contact = require('./mongoSchema'); 
 
 const listContacts = async () => {
   try {
