@@ -1,4 +1,6 @@
 const Contact = require('./mongoSchema'); 
+const mongoose = require('mongoose');
+
 
 const listContacts = async () => {
   try {
@@ -10,6 +12,9 @@ const listContacts = async () => {
 
 const getContactById = async (contactId) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(contactId)) {
+      return null; 
+    }
     return await Contact.findById(contactId);
   } catch (error) {
     throw error;
