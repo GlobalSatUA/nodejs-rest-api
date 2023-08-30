@@ -1,10 +1,10 @@
-const { v4: uuidv4 } = require('uuid');
 const {
   listContacts,
   getContactById,
   removeContact,
   addContact,
   updateContact,
+  updateStatusContact,
 } = require('../models/contacts');
 
 
@@ -18,13 +18,14 @@ const listContactsController = async (req, res, next) => {
 };
 
 const getContactByIdController = async (req, res, next) => {
-  const contactId = req.params.contactId; 
+  const contactId = req.params.contactId;
+  
   try {
     const contact = await getContactById(contactId);
-    if (contact) {
-      res.status(200).json(contact);
-    } else {
+    if (contact === null) {
       res.status(404).json({ message: 'Not found' });
+    } else if (contact) {
+      res.status(200).json(contact);
     }
   } catch (error) {
     next(error);
@@ -33,19 +34,18 @@ const getContactByIdController = async (req, res, next) => {
 
 
 const addContactController = async (req, res, next) => {
-  const { name, email, phone } = req.body;
+  const { name, email, phone } = req.body; 
 
-
-  const id = uuidv4();
-  const contactData = { id, name, email, phone };
+  const contactData = { name, email, phone };
 
   try {
-    await addContact(contactData);
-    res.status(201).json(contactData);
+    const newContact = await addContact(contactData);
+    res.status(201).json(newContact); 
   } catch (error) {
     console.error(error);
   }
 };
+
 
 const removeContactController = async (req, res, next) => {
   const contactId = req.params.contactId;
@@ -89,11 +89,38 @@ const updateContactController = async (req, res, next) => {
     }
   };
 
+  const updateStatusContactController = async (req, res, next) => {
+    const { contactId } = req.params;
+    const { favorite } = req.body;
+  
+    if (favorite === undefined) {
+      return res.status(400).json({ message: 'missing field favorite' });
+    }
+  
+    if (typeof favorite !== 'boolean') {
+      return res.status(400).json({ message: 'favorite must be a boolean' });
+    }
+  
+    try {
+      const updatedContact = await updateStatusContact(contactId, { favorite });
+      if (updatedContact) {
+        return res.status(200).json(updatedContact);
+      } else {
+        return res.status(404).json({ message: 'Not found' });
+      }
+    } catch (error) {
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  };
+  
+  
+
 module.exports = {
     listContactsController,
     getContactByIdController,
     addContactController,
     updateContactController,
     removeContactController,
+    updateStatusContactController,
 };
 
