@@ -9,8 +9,8 @@ const {
   updateStatusContactController,
 } = require('../../controllers/contactController');
 const { validateData } = require('../../schema/contactsSchema');
-const  validateObjectId  = require('../../schema/validateObjectId');
-const {checkToken} = require('../../schema/checkToken');
+const  validateObjectId  = require('../../middleware/validateObjectId');
+const {checkToken} = require('../../middleware/checkToken');
 
 router.get('/',checkToken, listContactsController);
 router.get('/:contactId',checkToken, getContactByIdController);

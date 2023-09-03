@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const {checkToken} = require('../schema/checkToken');
+const {checkToken} = require('../middleware/checkToken');
 
 const AuthController = require("../controllers/auth");
 const jsonParser = express.json();
