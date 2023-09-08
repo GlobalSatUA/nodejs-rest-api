@@ -1,30 +1,34 @@
 const {
-  listContacts,
-  getContactById,
   removeContact,
   addContact,
   updateContact,
   updateStatusContact,
 } = require('../models/contacts');
 
+const Contact = require('../models/mongoSchema');
+
 
 const listContactsController = async (req, res, next) => {
+  const userId = req.user._id; 
+
   try {
-    const contacts = await listContacts(); 
-    res.status(200).json(contacts); 
+    const contacts = await Contact.find({ owner: userId });
+
+    res.status(200).json(contacts);
   } catch (error) {
-    res.status(500).json({ error: error.message }); 
+    res.status(500).json({ error: error.message });
   }
 };
 
 const getContactByIdController = async (req, res, next) => {
   const contactId = req.params.contactId;
-  
+  const userId = req.user._id; 
   try {
-    const contact = await getContactById(contactId);
-    if (contact === null) {
-      res.status(404).json({ message: 'Not found' });
-    } else if (contact) {
+    const contact = await Contact.findOne({ _id: contactId, owner: userId });
+
+    if (!contact) {
+      res.status(404).json({ message: 'Contact not found' });
+    } else {
       res.status(200).json(contact);
     }
   } catch (error) {
@@ -33,18 +37,24 @@ const getContactByIdController = async (req, res, next) => {
 };
 
 
-const addContactController = async (req, res, next) => {
-  const { name, email, phone } = req.body; 
 
-  const contactData = { name, email, phone };
+const addContactController = async (req, res, next) => {
+  const { name, email, phone } = req.body;
+
+  const contactData = { name, email, phone, owner: req.user._id }; 
 
   try {
     const newContact = await addContact(contactData);
-    res.status(201).json(newContact); 
+
+    res.status(201).json(newContact);
   } catch (error) {
     console.error(error);
+    res.status(500).json({ message: 'Failed to add contact' });
   }
 };
+
+module.exports = { addContactController };
+
 
 
 const removeContactController = async (req, res, next) => {
