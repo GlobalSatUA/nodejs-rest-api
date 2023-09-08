@@ -9,5 +9,6 @@ router.post('/register', jsonParser, AuthController.register)
 router.post('/login', AuthController.login)
 router.post('/logout', AuthController.logout)
 router.get('/current', checkToken, AuthController.getCurrentUser)
+router.patch('/avatars', checkToken, AuthController.updateAvatar)
 
 module.exports = router;
