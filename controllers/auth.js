@@ -1,6 +1,11 @@
 const User = require("../models/user");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const gravatar = require("gravatar");
+const jimp = require("jimp");
+const multer = require("multer");
+const path = require("path");
+const fs = require("fs/promises");
 require('dotenv').config();
 
 const {
@@ -25,10 +30,12 @@ async function register(req, res, next) {
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
+    const avatarURL = gravatar.url(email,{s: '100', r: 'x', d: 'retro'});
+
     const newUser = new User({
       email,
       password: hashedPassword,
-      subscription: "starter",
+      avatarURL,
     });
 
     await newUser.save();
@@ -105,6 +112,57 @@ async function login(req, res, next) {
       res.status(401).json({ message: 'Not authorized' });
     }
   };
+
+  const storage = multer.memoryStorage();
+  const upload = multer({ storage });
+
+  async function updateAvatar(req, res, next) {
+    try {
+      upload.single("avatar")(req, res, async function (err) {
+        if (err) {
+          return next(err);
+        }
+  
+        if (!req.file) {
+          return res.status(400).json({ message: "No file uploaded" });
+        }
+  
+        const token = req.header("Authorization").replace("Bearer ", "");
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const userId = decoded.userId;
+        const user = await User.findOne({ _id: userId, token });
+  
+        if (!user) {
+          return res.status(401).json({ message: "Not authorized" });
+        }
+  
+        const uniqueFileNameTmp = `${user._id}-${Date.now()}${path.extname(
+          req.file.originalname
+        )}`;
+        const filePathTmp = path.join(__dirname, '..', 'tmp', uniqueFileNameTmp);
+  
+        await fs.writeFile(filePathTmp, req.file.buffer);
+  
+        const image = await jimp.read(filePathTmp);
+        await image.resize(250, 250).writeAsync(filePathTmp);
+  
+        const uniqueFileName = `${user._id}-${Date.now()}${path.extname(
+          req.file.originalname
+        )}`;
+        const filePath = path.join(__dirname, '..', 'public', 'avatars', uniqueFileName);
+  
+        await fs.rename(filePathTmp, filePath);
+  
+        user.avatarURL = `/avatars/${uniqueFileName}`;
+        await user.save();
+  
+        return res.status(200).json({ avatarURL: user.avatarURL });
+      });
+    } catch (error) {
+      return next(error);
+    }
+  }
+  
   
 
-module.exports = { register, login, logout, getCurrentUser };
+module.exports = { register, login, logout, getCurrentUser, updateAvatar };
