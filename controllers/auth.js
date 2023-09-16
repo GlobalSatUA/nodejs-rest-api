@@ -177,8 +177,6 @@ async function login(req, res, next) {
     try {
       const verificationToken = req.params.verificationToken;
   
-      console.log('Verification Token:', verificationToken);
-  
       const user = await User.findOne({ verificationToken });
   
       if (!user) {

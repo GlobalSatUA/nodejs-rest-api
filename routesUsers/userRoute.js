@@ -1,11 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const {checkToken} = require('../middleware/checkToken');
+const {checkUserVerification} = require('../middleware/checkUserVerification');
 const AuthController = require("../controllers/auth");
 const jsonParser = express.json();
 
 router.post('/register', jsonParser, AuthController.register);
-router.post('/login', AuthController.login)
+router.post('/login', checkUserVerification, AuthController.login)
 router.post('/logout', AuthController.logout)
 router.get('/current', checkToken, AuthController.getCurrentUser)
 router.patch('/avatars', checkToken, AuthController.updateAvatar)
